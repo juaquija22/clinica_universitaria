@@ -1,6 +1,8 @@
-
-
 DELIMITER $$
+
+-- ============================================================
+-- FACULTAD
+-- ============================================================
 
 CREATE PROCEDURE sp_facultad_insertar(
     IN p_nombre_facultad VARCHAR(100),
@@ -9,6 +11,7 @@ CREATE PROCEDURE sp_facultad_insertar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -19,15 +22,24 @@ BEGIN
     END;
 
     START TRANSACTION;
-        INSERT INTO Facultad (nombre_facultad, decano)
-        VALUES (p_nombre_facultad, p_decano);
+
+        SET @sql = 'INSERT INTO Facultad (nombre_facultad, decano) VALUES (?, ?)';
+        SET @p1  = p_nombre_facultad;
+        SET @p2  = p_decano;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1, @p2;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_facultad_obtener_todos()
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -39,12 +51,15 @@ BEGIN
     SELECT * FROM Facultad;
 END$$
 
+-- ------------------------------------------------------------
+
 CREATE PROCEDURE sp_facultad_obtener_por_id(
     IN p_facultad_id INT
 )
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -53,9 +68,14 @@ BEGIN
         CALL sp_error_log_insertar('Facultad', v_codigo, v_mensaje);
     END;
 
-    SELECT * FROM Facultad
-    WHERE facultad_id = p_facultad_id;
+    SET @sql = 'SELECT * FROM Facultad WHERE facultad_id = ?';
+    SET @p1  = p_facultad_id;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt USING @p1;
+    DEALLOCATE PREPARE stmt;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_facultad_actualizar(
     IN p_facultad_id     INT,
@@ -65,6 +85,7 @@ CREATE PROCEDURE sp_facultad_actualizar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -75,12 +96,19 @@ BEGIN
     END;
 
     START TRANSACTION;
-        UPDATE Facultad
-        SET nombre_facultad = p_nombre_facultad,
-            decano          = p_decano
-        WHERE facultad_id = p_facultad_id;
+
+        SET @sql = 'UPDATE Facultad SET nombre_facultad = ?, decano = ? WHERE facultad_id = ?';
+        SET @p1  = p_nombre_facultad;
+        SET @p2  = p_decano;
+        SET @p3  = p_facultad_id;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1, @p2, @p3;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_facultad_eliminar(
     IN p_facultad_id INT
@@ -88,6 +116,7 @@ CREATE PROCEDURE sp_facultad_eliminar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -98,8 +127,13 @@ BEGIN
     END;
 
     START TRANSACTION;
-        DELETE FROM Facultad
-        WHERE facultad_id = p_facultad_id;
+
+        SET @sql = 'DELETE FROM Facultad WHERE facultad_id = ?';
+        SET @p1  = p_facultad_id;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
 

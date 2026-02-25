@@ -1,6 +1,8 @@
-
-
 DELIMITER $$
+
+-- ============================================================
+-- MEDICAMENTO
+-- ============================================================
 
 CREATE PROCEDURE sp_medicamento_insertar(
     IN p_nombre_medicamento VARCHAR(100)
@@ -8,6 +10,7 @@ CREATE PROCEDURE sp_medicamento_insertar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -18,15 +21,23 @@ BEGIN
     END;
 
     START TRANSACTION;
-        INSERT INTO Medicamento (nombre_medicamento)
-        VALUES (p_nombre_medicamento);
+
+        SET @sql = 'INSERT INTO Medicamento (nombre_medicamento) VALUES (?)';
+        SET @p1  = p_nombre_medicamento;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_medicamento_obtener_todos()
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -38,12 +49,15 @@ BEGIN
     SELECT * FROM Medicamento;
 END$$
 
+-- ------------------------------------------------------------
+
 CREATE PROCEDURE sp_medicamento_obtener_por_id(
     IN p_medicamento_id INT
 )
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -52,9 +66,14 @@ BEGIN
         CALL sp_error_log_insertar('Medicamento', v_codigo, v_mensaje);
     END;
 
-    SELECT * FROM Medicamento
-    WHERE medicamento_id = p_medicamento_id;
+    SET @sql = 'SELECT * FROM Medicamento WHERE medicamento_id = ?';
+    SET @p1  = p_medicamento_id;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt USING @p1;
+    DEALLOCATE PREPARE stmt;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_medicamento_actualizar(
     IN p_medicamento_id     INT,
@@ -63,6 +82,7 @@ CREATE PROCEDURE sp_medicamento_actualizar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -73,11 +93,18 @@ BEGIN
     END;
 
     START TRANSACTION;
-        UPDATE Medicamento
-        SET nombre_medicamento = p_nombre_medicamento
-        WHERE medicamento_id = p_medicamento_id;
+
+        SET @sql = 'UPDATE Medicamento SET nombre_medicamento = ? WHERE medicamento_id = ?';
+        SET @p1  = p_nombre_medicamento;
+        SET @p2  = p_medicamento_id;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1, @p2;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_medicamento_eliminar(
     IN p_medicamento_id INT
@@ -85,6 +112,7 @@ CREATE PROCEDURE sp_medicamento_eliminar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -95,8 +123,13 @@ BEGIN
     END;
 
     START TRANSACTION;
-        DELETE FROM Medicamento
-        WHERE medicamento_id = p_medicamento_id;
+
+        SET @sql = 'DELETE FROM Medicamento WHERE medicamento_id = ?';
+        SET @p1  = p_medicamento_id;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
 

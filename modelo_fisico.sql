@@ -134,3 +134,15 @@ CREATE TABLE Error_Log (
     mensaje        VARCHAR(500)  NOT NULL,
     fecha_hora     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS Informe_Citas_Diario (
+    informe_id     INT           NOT NULL AUTO_INCREMENT,
+    fecha_cita     DATE          NOT NULL,               
+    sede           VARCHAR(100)  NOT NULL,              
+    medico         VARCHAR(100)  NOT NULL,              
+    total_pacientes INT          NOT NULL DEFAULT 0,     
+    generado_en    DATETIME      NOT NULL,               
+    PRIMARY KEY (informe_id),
+    INDEX idx_fecha (fecha_cita),                        
+    INDEX idx_sede  (sede)
+);

@@ -1,6 +1,8 @@
-
-
 DELIMITER $$
+
+-- ============================================================
+-- MEDICO
+-- ============================================================
 
 CREATE PROCEDURE sp_medico_insertar(
     IN p_persona_id  INT,
@@ -9,6 +11,7 @@ CREATE PROCEDURE sp_medico_insertar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -19,15 +22,24 @@ BEGIN
     END;
 
     START TRANSACTION;
-        INSERT INTO Medico (persona_id, facultad_id)
-        VALUES (p_persona_id, p_facultad_id);
+
+        SET @sql = 'INSERT INTO Medico (persona_id, facultad_id) VALUES (?, ?)';
+        SET @p1  = p_persona_id;
+        SET @p2  = p_facultad_id;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1, @p2;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_medico_obtener_todos()
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -46,12 +58,15 @@ BEGIN
     JOIN Facultad f  ON m.facultad_id = f.facultad_id;
 END$$
 
+-- ------------------------------------------------------------
+
 CREATE PROCEDURE sp_medico_obtener_por_id(
     IN p_medico_id INT
 )
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -60,16 +75,18 @@ BEGIN
         CALL sp_error_log_insertar('Medico', v_codigo, v_mensaje);
     END;
 
-    SELECT m.medico_id,
-           pe.nombre,
-           pe.telefono,
-           f.nombre_facultad,
-           f.decano
-    FROM Medico m
-    JOIN Persona  pe ON m.persona_id  = pe.persona_id
-    JOIN Facultad f  ON m.facultad_id = f.facultad_id
-    WHERE m.medico_id = p_medico_id;
+    SET @sql = 'SELECT m.medico_id, pe.nombre, pe.telefono, f.nombre_facultad, f.decano
+                FROM Medico m
+                JOIN Persona  pe ON m.persona_id  = pe.persona_id
+                JOIN Facultad f  ON m.facultad_id = f.facultad_id
+                WHERE m.medico_id = ?';
+    SET @p1  = p_medico_id;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt USING @p1;
+    DEALLOCATE PREPARE stmt;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_medico_actualizar(
     IN p_medico_id   INT,
@@ -79,6 +96,7 @@ CREATE PROCEDURE sp_medico_actualizar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -89,12 +107,19 @@ BEGIN
     END;
 
     START TRANSACTION;
-        UPDATE Medico
-        SET persona_id  = p_persona_id,
-            facultad_id = p_facultad_id
-        WHERE medico_id = p_medico_id;
+
+        SET @sql = 'UPDATE Medico SET persona_id = ?, facultad_id = ? WHERE medico_id = ?';
+        SET @p1  = p_persona_id;
+        SET @p2  = p_facultad_id;
+        SET @p3  = p_medico_id;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1, @p2, @p3;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
+
+-- ------------------------------------------------------------
 
 CREATE PROCEDURE sp_medico_eliminar(
     IN p_medico_id INT
@@ -102,6 +127,7 @@ CREATE PROCEDURE sp_medico_eliminar(
 BEGIN
     DECLARE v_codigo  INT DEFAULT 0;
     DECLARE v_mensaje VARCHAR(500);
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1
@@ -112,8 +138,13 @@ BEGIN
     END;
 
     START TRANSACTION;
-        DELETE FROM Medico
-        WHERE medico_id = p_medico_id;
+
+        SET @sql = 'DELETE FROM Medico WHERE medico_id = ?';
+        SET @p1  = p_medico_id;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt USING @p1;
+        DEALLOCATE PREPARE stmt;
+
     COMMIT;
 END$$
 
